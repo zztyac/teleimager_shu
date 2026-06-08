@@ -675,7 +675,7 @@ class ZMQ_Requester:
 # image client
 # ========================================================
 class ImageClient:
-    _CAMERA_NAMES = ("head_camera", "left_wrist_camera", "right_wrist_camera")
+    _CAMERA_NAMES = ("head_camera", "right_side_camera", "left_wrist_camera", "right_wrist_camera")
 
     def __init__(self, host="192.168.123.164", request_port=60000, request_bgr: bool = False):
         """
@@ -741,6 +741,9 @@ class ImageClient:
 
     def get_head_frame(self):
         return self._get_zmq_frame("head_camera")
+
+    def get_right_side_frame(self):
+        return self._get_zmq_frame("right_side_camera")
     
     def get_left_wrist_frame(self):
         return self._get_zmq_frame("left_wrist_camera")
@@ -759,7 +762,7 @@ def main():
     parser.add_argument('--host', type=str, default='192.168.123.164', help='IP address of image server')
     args = parser.parse_args()
 
-    # Example usage with three camera streams
+    # Example usage with camera streams
     client = ImageClient(host=args.host, request_bgr=True)
     cam_config = client.get_cam_config()
 
@@ -773,6 +776,14 @@ def main():
                 logger_mp.debug(f"Head Camera Shape: {head_cfg.get('image_shape')}")
                 logger_mp.debug(f"Head Camera Binocular: {head_cfg.get('binocular')}")
                 cv2.imshow("Head Camera", head_img.bgr)
+
+        right_side_cfg = cam_config.get('right_side_camera', {})
+        if right_side_cfg.get('enable_zmq', False):
+            right_side_img = client.get_right_side_frame()
+            if right_side_img.bgr is not None:
+                logger_mp.info(f"Right Side Camera FPS: {right_side_img.fps:.2f}")
+                logger_mp.debug(f"Right Side Camera Shape: {right_side_cfg.get('image_shape')}")
+                cv2.imshow("Right Side Camera", right_side_img.bgr)
 
         left_wrist_cfg = cam_config.get('left_wrist_camera', {})
         if left_wrist_cfg.get('enable_zmq', False):
