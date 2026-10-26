@@ -694,7 +694,7 @@ class ImageClient:
         if self._cam_config is None:
             raise RuntimeError("Failed to get camera configuration.")
         
-        for camera_name in ('head_camera', 'left_wrist_camera', 'right_wrist_camera'):
+        for camera_name in ('head_camera', 'left_wrist_camera', 'right_wrist_camera', 'right_side_camera'):
             self._get_frame(camera_name)
 
         head_config = self._cam_config.get('head_camera', {})
@@ -722,6 +722,9 @@ class ImageClient:
     
     def get_right_wrist_frame(self):
         return self._get_frame('right_wrist_camera')
+
+    def get_right_side_frame(self):
+        return self._get_frame('right_side_camera')
         
     def close(self):
         self._subscriber_manager.close()
@@ -761,6 +764,13 @@ def main():
                 logger_mp.info(f"Right Wrist Camera FPS: {right_wrist_img.fps:.2f}")
                 logger_mp.debug(f"Right Wrist Camera Shape: {cam_config['right_wrist_camera']['image_shape']}")
                 cv2.imshow("Right Wrist Camera", right_wrist_img.bgr)
+
+        if cam_config.get('right_side_camera', {}).get('enable_zmq', False):
+            right_side_img = client.get_right_side_frame()
+            if right_side_img.bgr is not None:
+                logger_mp.info(f"Right Side Camera FPS: {right_side_img.fps:.2f}")
+                logger_mp.debug(f"Right Side Camera Shape: {cam_config['right_side_camera']['image_shape']}")
+                cv2.imshow("Right Side Camera", right_side_img.bgr)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             logger_mp.info("Exiting image client on user request.")
